@@ -1,7 +1,7 @@
-/*********************ESP2866_IR_WIFI_V2**************************************
+/***********************************************************
 1. Wifi and IR with Persistance  -- 02-09-2019
-2. Serail Monitor baud=74880
-    calls : Terturn Html pasge with button contrils
+2. Serail Monitor baud=9600
+    calls : It rerturn Html pasge with button contrils
     1.  /SW<n>ON    -> Switch <n> ON
     2. /SW<n>OFF   -> Switch <n> OFF
     3. /SW<n>TGL   ->  Toggle switch <n>
@@ -17,30 +17,18 @@
 
     CONFIG
     1. /CFG/INV/<0|1>    -> Inverse HI/Lo . (EPROM 63 rd byte)
-      Updated: 30-03-2020 ->  Adding Config for Device Name,ssid,pwd,IP  using EPROM.
+      Updated: 30-03-2020 -> V1, Adding Config for Device Name,ssid,pwd,IP  using EPROM.
     2. /CFG/NAM/<8-32 char key>  (eprom 31-> 62)
     3. /CFG/SID/<8-32 chars ssid>  (Eprom 64-> 97)
     4. /CFG/PWD/<8-16 char key>  (eprom 98-> 111)
     5. /CFG/IPL/<Local IP for ESP> - max 16 bytes  (eprom 128->159)
    
-    Updated: 31-03-2020 -> Added Reset/factory reset.
     FACTORY / RESET:
      1. /FACRST   -> Facroty Reset.
      2. /RESET    -> Restart.
 
-Variables used:
-IR Codes :                  
- RCODE[10]={0x1FEE01F,0x1FE50AF,0x1FED827,0x1FEF807,0x1FE30CF,0x1FEB04F,0x1FE708F,0x1FE00FF,0x1FEF00F,0x1FE9867};  
-
-SWITCH Identifier: 
- OnSw[ST_DIGITAL]={"SW1","SW2","SW3","SW4","SW5"};
-
-GPIO PINs:
- st_Digital[ST_DIGITAL]={16,5,4,12,13}; //D0,D1,D2,D6,D7
-
-IR Receiv Pin : RECV_PIN = 14; //D5
 *************************************************************/
-#include <IRrecv.h>
+#include <IRrecv.h> // IR lib for esp8266 / 32
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
 
@@ -62,6 +50,8 @@ decode_results results;
 
 // IR Codes                    
 long RCODE[10]={0x1FEE01F,0x1FE50AF,0x1FED827,0x1FEF807,0x1FE30CF,0x1FEB04F,0x1FE708F,0x1FE00FF,0x1FEF00F,0x1FE9867};  
+long RCODE2[10]={0xD,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0xC};
+long RCODE3[10]={0xFD08F7,0xFD20DF,0xFDA05F,0xFD609F,0xFD10EF,0xFD906F,0xFD50AF,0xFD30CF,0xFDB04F,0xFD708F};
 String OnSw[ST_DIGITAL]={"SW1","SW2","SW3","SW4","SW5"};
 
 int st_Digital[ST_DIGITAL]={16,5,4,12,13}; //D0,D1,D2,D6,D7
@@ -78,13 +68,13 @@ int k=0;
 int inv_op=1;
 
 //use your wifi ssid and password
- String ssid = "nagesh";
-String password = "90000109031";
-String deviceName="NAG_ESP66_063";
+String ssid ="nagxxx";  
+String password ="123xxxxxx"; 
+String deviceName="XXX_ESP66_NN";
 byte ip1=192;
 byte ip2=168;
-byte ip3=0;
-byte ip4=63;
+byte ip3=0;   
+byte ip4=5;  
 
 
 IPAddress subnet(255, 255, 255, 0);
@@ -92,7 +82,7 @@ WiFiServer server(80);
 
 void setup() { 
  irrecv.enableIRIn();  // Start the receiver
- Serial.begin(74880);
+ Serial.begin(9600);
  delay(10); 
  EEPROM.begin(EEPROM_SIZE);  
  init_pins();
@@ -165,10 +155,11 @@ void loop() {
   int op=0;
  //ir receiveing code, change with your ir codes
   if (irrecv.decode(&results)) {
-   unsigned int ircode = results.value;    
+   unsigned int ircode = results.value; 
+   //Serial.println(ircode,HEX);   
      for(int i=0;i<10;i++)
      {
-       if(ircode==RCODE[i]){//Serial.print(i);Serial.print("->");
+       if(ircode==RCODE[i] || ircode==RCODE2[i] || ircode==RCODE3[i]){//Serial.print(i);Serial.print("->");
        Serial.println(ircode,HEX);     
         if(i==0)allset(LO); 
         else if(i==9)  allset(HI);     
@@ -275,7 +266,7 @@ if(WiFi.status() != WL_CONNECTED)rewifi(); // Try reconnect if not connected
   else if (request.indexOf("/FACRST")>0)
   {
     Serial.println("Factory Reset !.. Rebooting..");
-    client.println("Factory Reset !.. Rebooting..");    
+    client.println("Factory Reset");    
     set_reset(1);
     delay(10);
     ESP.restart();
