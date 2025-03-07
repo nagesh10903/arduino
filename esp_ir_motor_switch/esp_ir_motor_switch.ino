@@ -82,13 +82,13 @@ int inv_op=1;
 String  btMode="Normal";
 
 //use your wifi ssid and password
-String ssid ="nageshdlink";  
-String password ="9000010903"; 
-String deviceName="ARIBA-ESP_51";
+String ssid ="nagesh_ssid";  
+String password ="12345678"; 
+String deviceName="LOCATE-ESP_51";
 byte ip1=192;
 byte ip2=168;
 byte ip3=0;   
-byte ip4=51;  
+byte ip4=nn;  
 
 
 IPAddress subnet(255, 255, 255, 0);
